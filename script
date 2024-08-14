@@ -1,0 +1,54 @@
+function sendEmails() {
+  // Get the active spreadsheet and sheet
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const data = sheet.getDataRange().getValues();
+
+  // Get the ID of the "test" folder (replace with your actual folder ID)
+  const folderId = "1WwTtG1t3fG-O7MDDBFJ31g82qUupwyQ8";
+
+  // Skip the header row (assuming your data starts in row 2)
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const email = row[0]; // Email address (column A)
+    const subject = row[1]; // Subject (column B)
+    const message = row[2]; // Message (column C)
+   const attachments = row[3];//Attachment (column D)
+
+    // Check if email address is valid (optional)
+    if (!isValidEmail(email)) {
+      continue; // Skip row if email is invalid
+    }
+
+    // Get the attachment file
+    const attachment = DriveApp.getFolderById(folderId).getFilesByName(attachments).next();
+
+    // Create the email message
+    const emailMessage = createEmailMessage(subject, message, attachment);
+
+    // Send the email
+    MailApp.sendEmail(email, emailMessage.subject, emailMessage.body, emailMessage.options);
+  }
+}
+
+// Function to check if email is valid (optional)
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Function to create the email message
+function createEmailMessage(subject, message, attachment) {
+  const options = {
+    htmlBody: message, // Use HTML for formatting (optional)
+  };
+
+  if (attachment) {
+    options.attachments = [attachment.getBlob()];
+  }
+
+  return {
+    subject: subject,
+    body: message, // Plain text version of the message
+    options: options,
+  };
+}
